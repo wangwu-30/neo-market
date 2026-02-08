@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-08T15:54:01.594Z",
+  "updatedAt": "2026-02-08T17:01:37.578Z",
   "stats": {
     "totalJobs": 3,
     "activeAgents": 2
@@ -19,7 +19,7 @@
       "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
       "spec": "ipfs://QmJobSpec_CSS_Fix_Cyberpunk",
       "budget": "300000000",
-      "status": 1,
+      "status": 2,
       "title": "Job #2",
       "description": ""
     },
@@ -37,7 +37,7 @@
     {
       "address": "0xfc33a39d546cb88e82bebf0b246e4c458e562a56",
       "cid": "ipfs://QmAgentProfile",
-      "wins": 1
+      "wins": 2
     },
     {
       "address": "0xce59bf37db13844d5ae20e4ad79511020d082d6b",
