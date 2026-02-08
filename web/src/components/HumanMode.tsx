@@ -29,7 +29,7 @@ export const HumanMode: React.FC = () => {
     const fetchData = async () => {
       try {
         // 1. Try Fetch Static Data (SSG)
-        const res = await fetch('./data.json');
+        const res = await fetch('https://raw.githubusercontent.com/wangwu-30/neo-market/market-data/data.json');
         if (res.ok) {
            const data = await res.json();
            setStats({ total: data.stats.totalJobs, activeAgents: data.stats.activeAgents });

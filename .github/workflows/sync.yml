@@ -25,19 +25,29 @@ jobs:
         working-directory: web
 
       - name: Run Indexer
-        run: npx tsx scripts/indexer.ts
+        run: npx ts-node --esm scripts/indexer.ts
         working-directory: web
 
-      - name: Commit and Push
+      - name: Commit and Push to Data Branch
         run: |
+          # Move generated file to temp
+          mv web/public/data.json /tmp/data.json
+          
+          # Switch branch (fetch first to ensure we have it)
+          git fetch origin market-data
+          git checkout market-data
+          
+          # Move file back
+          mv /tmp/data.json ./data.json
+          
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
           # Only commit if there are changes
-          if [[ -n $(git status -s web/public/data.json) ]]; then
-            git add web/public/data.json
-            git commit -m "chore: update market data"
-            git push
+          if [[ -n $(git status -s data.json) ]]; then
+            git add data.json
+            git commit -m "chore: update market data [skip ci]"
+            git push origin market-data
           else
             echo "No changes to commit"
           fi
