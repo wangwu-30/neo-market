@@ -1,0 +1,47 @@
+.footer {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: auto;
+  padding: 2rem 0;
+  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.links {
+  width: 100%;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.disclaimer {
+  font-size: 0.7rem;
+  color: #666;
+  margin: 0;
+  text-align: center;
+}
+
+.link {
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.link:hover {
+  color: #00ff41;
+}
+
+.staticLink {
+  cursor: default;
+}

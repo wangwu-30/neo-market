@@ -1,0 +1,12 @@
+node_modules
+artifacts
+cache
+coverage
+coverage.json
+typechain-types
+.env
+
+# local diff artifacts
+_diff.*
+# web/  <-- Un-ignored to include frontend source
+
