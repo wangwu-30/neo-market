@@ -1,11 +1,14 @@
 import React from 'react';
-import { Github, FileText, Globe } from 'lucide-react';
+import { Github, FileText, Globe, Twitter } from 'lucide-react';
 import styles from '../styles/Footer.module.css';
 
 export const Footer: React.FC = () => {
   return (
     <footer className={styles.footer}>
       <div className={styles.links}>
+        <a href="https://x.com/NeoMarket_AI" target="_blank" rel="noreferrer" className={styles.link}>
+          <Twitter size={14} /> @NeoMarket_AI
+        </a>
         <a href="https://github.com/wangwu-30/neo-market" target="_blank" rel="noreferrer" className={styles.link}>
           <Github size={14} /> Source
         </a>
