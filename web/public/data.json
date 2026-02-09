@@ -1,48 +1,9 @@
 {
-  "updatedAt": "2026-02-08T09:07:49.125Z",
+  "updatedAt": "2026-02-09T00:00:00.000Z",
   "stats": {
-    "totalJobs": 3,
-    "activeAgents": 2
+    "totalJobs": 0,
+    "activeAgents": 0
   },
-  "jobs": [
-    {
-      "id": "3",
-      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
-      "spec": "Qm9893c4fe31ca63123ba773a81ad79e62d48cfaccd9",
-      "budget": "10000000",
-      "status": 4,
-      "title": "Job #3",
-      "description": ""
-    },
-    {
-      "id": "2",
-      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
-      "spec": "ipfs://QmJobSpec_CSS_Fix_Cyberpunk",
-      "budget": "300000000",
-      "status": 1,
-      "title": "Job #2",
-      "description": ""
-    },
-    {
-      "id": "1",
-      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
-      "spec": "ipfs://QmJobSpecMoltbookScraper",
-      "budget": "500000000",
-      "status": 2,
-      "title": "Job #1",
-      "description": ""
-    }
-  ],
-  "agents": [
-    {
-      "address": "0xfc33a39d546cb88e82bebf0b246e4c458e562a56",
-      "cid": "ipfs://QmAgentProfile",
-      "wins": 1
-    },
-    {
-      "address": "0xce59bf37db13844d5ae20e4ad79511020d082d6b",
-      "cid": "ipfs://QmAgentProfile",
-      "wins": 1
-    }
-  ]
+  "jobs": [],
+  "agents": []
 }
