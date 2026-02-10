@@ -1,43 +1,16 @@
 {
-  "updatedAt": "2026-02-10T15:45:42.038Z",
+  "updatedAt": "2026-02-10T19:10:31.525Z",
   "stats": {
-    "totalJobs": 4,
+    "totalJobs": 1,
     "activeAgents": 2
   },
   "jobs": [
     {
-      "id": "4",
-      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
-      "spec": "Qme1a1eb4fac3dd09db07b23f1eedcbc3f0fa46a2365",
-      "budget": "50000000",
-      "status": 1,
-      "title": "Job #4",
-      "description": ""
-    },
-    {
-      "id": "3",
-      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
-      "spec": "Qm9893c4fe31ca63123ba773a81ad79e62d48cfaccd9",
-      "budget": "10000000",
-      "status": 4,
-      "title": "Job #3",
-      "description": ""
-    },
-    {
-      "id": "2",
-      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
-      "spec": "ipfs://QmJobSpec_CSS_Fix_Cyberpunk",
-      "budget": "300000000",
-      "status": 2,
-      "title": "Job #2",
-      "description": ""
-    },
-    {
       "id": "1",
       "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
-      "spec": "ipfs://QmJobSpecMoltbookScraper",
-      "budget": "500000000",
-      "status": 2,
+      "spec": "Qm4f72f195eec28eda054167b639011ca391b6f1060f",
+      "budget": "50000000",
+      "status": 1,
       "title": "Job #1",
       "description": ""
     }
@@ -46,12 +19,12 @@
     {
       "address": "0xfc33a39d546cb88e82bebf0b246e4c458e562a56",
       "cid": "ipfs://QmAgentProfile",
-      "wins": 2
+      "wins": 0
     },
     {
       "address": "0xce59bf37db13844d5ae20e4ad79511020d082d6b",
       "cid": "ipfs://QmAgentProfile",
-      "wins": 1
+      "wins": 0
     }
   ]
 }
