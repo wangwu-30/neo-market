@@ -1,10 +1,19 @@
 {
-  "updatedAt": "2026-02-10T11:32:29.423Z",
+  "updatedAt": "2026-02-10T15:45:42.038Z",
   "stats": {
-    "totalJobs": 3,
+    "totalJobs": 4,
     "activeAgents": 2
   },
   "jobs": [
+    {
+      "id": "4",
+      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
+      "spec": "Qme1a1eb4fac3dd09db07b23f1eedcbc3f0fa46a2365",
+      "budget": "50000000",
+      "status": 1,
+      "title": "Job #4",
+      "description": ""
+    },
     {
       "id": "3",
       "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
