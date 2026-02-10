@@ -9,14 +9,14 @@ const __dirname = path.dirname(__filename);
 
 // Hardcoded for independence
 const RPC = "https://ethereum-sepolia-rpc.publicnode.com";
-const MARKET_ADDR = "0x339f142deE647aD8518db6b7e2045B5F3d5aEeFc";
+const MARKET_ADDR = "0x7Ee80Bdbb13417660610fec998E24d9F4d3DeBc3";
 
 // Define ABI
 const MARKET_ABI = parseAbi([
   "function jobCount() view returns (uint256)",
   "function getJob(uint256) view returns ((uint256 jobId, address buyer, string jobSpecCID, uint8 sku, uint256 budget, address paymentToken, uint64 deadline, uint8 status))",
   "function selectedBidOf(uint256) view returns (uint256)",
-  "function getBid(uint256) view returns ((uint256 bidId, uint256 jobId, address agent, string bidCID, uint256 price, uint64 eta))",
+  "function getBid(uint256) view returns ((uint256 bidId, uint256 jobId, address agent, string bidCID, uint256 price, uint64 eta, uint8 maxRevisions))",
   "function bidCount() view returns (uint256)"
 ]);
 
