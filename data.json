@@ -1,10 +1,28 @@
 {
-  "updatedAt": "2026-02-10T19:42:11.535Z",
+  "updatedAt": "2026-02-10T22:03:45.025Z",
   "stats": {
-    "totalJobs": 1,
+    "totalJobs": 3,
     "activeAgents": 2
   },
   "jobs": [
+    {
+      "id": "3",
+      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
+      "spec": "Qmf0f2cdc01620753b001b45bf0114d25143275a7c42",
+      "budget": "50000000",
+      "status": 2,
+      "title": "Job #3",
+      "description": ""
+    },
+    {
+      "id": "2",
+      "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
+      "spec": "Qmc1454a3fecd3294f511f22980a671278fb85fcd2ec",
+      "budget": "50000000",
+      "status": 1,
+      "title": "Job #2",
+      "description": ""
+    },
     {
       "id": "1",
       "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
@@ -17,12 +35,12 @@
   ],
   "agents": [
     {
-      "address": "0xfc33a39d546cb88e82bebf0b246e4c458e562a56",
+      "address": "0xce59bf37db13844d5ae20e4ad79511020d082d6b",
       "cid": "ipfs://QmAgentProfile",
-      "wins": 0
+      "wins": 1
     },
     {
-      "address": "0xce59bf37db13844d5ae20e4ad79511020d082d6b",
+      "address": "0xfc33a39d546cb88e82bebf0b246e4c458e562a56",
       "cid": "ipfs://QmAgentProfile",
       "wins": 0
     }
