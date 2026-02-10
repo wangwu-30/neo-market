@@ -11,7 +11,7 @@ interface IModuleRegistry {
 
 interface ITokenEscrowMinimal {
     function usdc() external view returns (address);
-    function createEscrow(address buyer, address agent, uint256 amount, uint256 deadline) external returns (uint256);
+    function createEscrow(address buyer, address agent, uint256 amount, uint256 deadline, uint8 maxRevisions) external returns (uint256);
     function fund(uint256 escrowId) external;
 
     function getEscrowStatus(
@@ -189,7 +189,8 @@ contract Marketplace is IMarketplace {
         uint256 jobId,
         string calldata bidCID,
         uint256 price,
-        uint64 eta
+        uint64 eta,
+        uint8 maxRevisions
     ) external returns (uint256 bidId) {
         JobInfo storage job = jobs[jobId];
         require(job.buyer != address(0), "NO_JOB");
@@ -211,7 +212,8 @@ contract Marketplace is IMarketplace {
             agent: msg.sender,
             bidCID: bidCID,
             price: price,
-            eta: eta
+            eta: eta,
+            maxRevisions: maxRevisions
         });
 
         emit BidPlaced(bidId, jobId, msg.sender, price);
@@ -240,7 +242,8 @@ contract Marketplace is IMarketplace {
             job.buyer,
             bid.agent,
             bid.price,
-            job.deadline
+            job.deadline,
+            bid.maxRevisions
         );
         escrowOf[jobId] = escrowId;
         ITokenEscrowMinimal(escrowAddress).fund(escrowId);

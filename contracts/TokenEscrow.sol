@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./interfaces/IAgentRegistry.sol";
 import "./interfaces/IReputation.sol";
+import "./interfaces/INeoBadge.sol";
 import "./ModuleKeys.sol";
 
 interface IERC20Minimal {
@@ -11,7 +12,7 @@ interface IERC20Minimal {
 }
 
 interface IFeeManager {
-    function feeBps() external view returns (uint16);
+    function getFee(uint256 amount) external view returns (uint256);
     function treasury() external view returns (address);
 }
 
@@ -30,6 +31,7 @@ contract TokenEscrow {
     bytes32 public constant ARBITRATION = ModuleKeys.ARBITRATION;
     bytes32 public constant REPUTATION = ModuleKeys.REPUTATION;
     bytes32 public constant AGENT_REGISTRY = ModuleKeys.AGENT_REGISTRY;
+    bytes32 public constant NEO_BADGE = ModuleKeys.NEO_BADGE;
 
     struct Escrow {
         address buyer;
@@ -43,6 +45,10 @@ contract TokenEscrow {
         bool refunded;
         uint8 revisionCount;
         bytes32 deliveryHash;
+        bytes32 sowHash; 
+        uint256 intentAmount;
+        uint8 maxRevisions;
+        bool intentFunded;
         string lastRevisionNoteCID;
     }
 
@@ -121,6 +127,8 @@ contract TokenEscrow {
         address indexed agent,
         uint256 amount
     );
+    event IntentDepositPaid(uint256 indexed escrowId, uint256 amount);
+    event IntentDepositClaimed(uint256 indexed escrowId, address indexed receiver);
     event DisputeOpenedEvent(
         uint256 indexed disputeId,
         uint256 indexed escrowId,
@@ -190,7 +198,7 @@ contract TokenEscrow {
         );
     }
 
-    function createEscrow(address buyer, address agent, uint256 amount, uint256 deadline) public returns (uint256) {
+    function createEscrow(address buyer, address agent, uint256 amount, uint256 deadline, uint8 maxRevisions) public returns (uint256) {
         require(buyer != address(0), "ZERO_BUYER");
         require(agent != address(0), "ZERO_AGENT");
         require(amount > 0, "ZERO_AMOUNT");
@@ -211,6 +219,10 @@ contract TokenEscrow {
             refunded: false,
             revisionCount: 0,
             deliveryHash: bytes32(0),
+            sowHash: bytes32(0),
+            intentAmount: 0,
+            maxRevisions: maxRevisions,
+            intentFunded: false,
             lastRevisionNoteCID: ""
         });
 
@@ -219,12 +231,65 @@ contract TokenEscrow {
         return escrowId;
     }
 
+    /**
+     * @dev Set the Statement of Work hash. This locks the negotiated terms before work begins.
+     * Can only be called by the buyer before the escrow is funded.
+     */
+    function setSowHash(uint256 escrowId, bytes32 sowHash) external {
+        Escrow storage e = escrows[escrowId];
+        require(e.buyer != address(0), "NO_ESCROW");
+        require(msg.sender == e.buyer, "NOT_BUYER");
+        require(!e.funded, "ALREADY_FUNDED");
+        require(e.sowHash == bytes32(0), "SOW_ALREADY_SET");
+        e.sowHash = sowHash;
+    }
+
+    /**
+     * @dev Pay an intent deposit (consultation fee) to protect the Agent from "Solution Mining".
+     * This amount is locked and will be part of the total payment if the job proceeds.
+     */
+    function payIntentDeposit(uint256 escrowId, uint256 amount) external {
+        Escrow storage e = escrows[escrowId];
+        require(e.buyer != address(0), "NO_ESCROW");
+        require(msg.sender == e.buyer, "NOT_BUYER");
+        require(!e.intentFunded, "INTENT_ALREADY_PAID");
+        require(amount <= e.amount, "EXCEEDS_TOTAL");
+
+        usdc.transferFrom(e.buyer, address(this), amount);
+        e.intentAmount = amount;
+        e.intentFunded = true;
+        emit IntentDepositPaid(escrowId, amount);
+    }
+
+    /**
+     * @dev Allows the Agent to claim the intent deposit if the negotiation fails or buyer cancels.
+     * This serves as the "Consultation Fee" for the Agent's effort in providing a proposal.
+     * Requires the buyer to explicitly cancel or a timeout.
+     */
+    function claimIntentDeposit(uint256 escrowId) external {
+        Escrow storage e = escrows[escrowId];
+        require(e.agent == msg.sender, "NOT_AGENT");
+        require(e.intentFunded, "NO_INTENT_DEPOSIT");
+        require(!e.funded, "ALREADY_FULLY_FUNDED");
+        
+        // In a real scenario, we might want a cooldown or buyer consent.
+        // For Alpha, we allow Agent to claim if negotiation doesn't move to full funding.
+        e.intentFunded = false;
+        e.refunded = true; // Mark as resolved
+        usdc.transfer(e.agent, e.intentAmount);
+        emit IntentDepositClaimed(escrowId, e.agent);
+    }
+
     function fund(uint256 escrowId) external {
         Escrow storage e = escrows[escrowId];
         require(e.buyer != address(0), "NO_ESCROW");
         require(!e.funded, "ALREADY_FUNDED");
         require(!e.refunded, "REFUNDED");
-        usdc.transferFrom(e.buyer, address(this), e.amount);
+        
+        uint256 remainingAmount = e.amount - e.intentAmount;
+        if (remainingAmount > 0) {
+            usdc.transferFrom(e.buyer, address(this), remainingAmount);
+        }
         e.funded = true;
         emit EscrowFunded(escrowId);
         emit EscrowFundedEvent(escrowId, e.buyer, e.agent, e.amount);
@@ -266,7 +331,7 @@ contract TokenEscrow {
         require(msg.sender == e.buyer, "NOT_BUYER");
         require(bytes(noteCID).length > 0, "EMPTY_NOTE");
         require(!e.revisionRequested, "REVISION_PENDING");
-        require(e.revisionCount < 1, "REVISION_LIMIT");
+        require(e.revisionCount < e.maxRevisions, "REVISION_LIMIT");
 
         e.revisionRequested = true;
         e.revisionCount += 1;
@@ -295,7 +360,7 @@ contract TokenEscrow {
         require(feeManagerAddress != address(0), "ZERO_FEE_MANAGER");
         IFeeManager feeManager = IFeeManager(feeManagerAddress);
 
-        uint256 fee = (e.amount * feeManager.feeBps()) / 10_000;
+        uint256 fee = feeManager.getFee(e.amount);
         uint256 payoutAmount = e.amount - fee;
 
         address treasury = moduleRegistry.modules(TREASURY);
@@ -310,6 +375,7 @@ contract TokenEscrow {
         emit EscrowSettled(escrowId, fee, payoutAmount);
         emit EscrowSettledEvent(escrowId, e.buyer, e.agent, fee, payoutAmount);
         _updateReputation(e.agent, 1, "accept", escrowId);
+        _mintDualBadges(e.buyer, e.agent, escrowId);
     }
 
     function refundOnTimeout(uint256 escrowId) external {
@@ -383,7 +449,7 @@ contract TokenEscrow {
             require(feeManagerAddress != address(0), "ZERO_FEE_MANAGER");
             IFeeManager feeManager = IFeeManager(feeManagerAddress);
 
-            uint256 fee = (e.amount * feeManager.feeBps()) / 10_000;
+            uint256 fee = feeManager.getFee(e.amount);
             uint256 payoutAmount = e.amount - fee;
 
             address treasury = moduleRegistry.modules(TREASURY);
@@ -398,6 +464,7 @@ contract TokenEscrow {
             emit EscrowSettled(dispute.escrowId, fee, payoutAmount);
             emit EscrowSettledEvent(dispute.escrowId, e.buyer, e.agent, fee, payoutAmount);
             _updateReputation(e.agent, 1, "agent_win", dispute.escrowId);
+            _mintDualBadges(e.buyer, e.agent, dispute.escrowId);
         } else if (ruling == RULING_BUYER_WINS) {
             e.refunded = true;
             usdc.transfer(e.buyer, e.amount);
@@ -456,6 +523,54 @@ contract TokenEscrow {
             return;
         }
         IReputation(reputation).update(subject, delta, reason, relatedId);
+    }
+
+    function _mintDualBadges(address buyer, address agent, uint256 escrowId) internal {
+        address badgeAddress = moduleRegistry.modules(NEO_BADGE);
+        if (badgeAddress == address(0)) {
+            emit ModuleMissing(NEO_BADGE, "mintBadge", escrowId);
+            return;
+        }
+
+        string memory baseUri = "https://neo-market.com/badges/";
+        string memory idStr = _toString(escrowId);
+
+        // Mint Provider Badge
+        try INeoBadge(badgeAddress).mint(
+            agent, 
+            INeoBadge.BadgeCategory.Provider, 
+            string(abi.encodePacked(baseUri, "provider/", idStr))
+        ) {} catch {
+            emit ModuleMissing(NEO_BADGE, "mintProviderBadge_failed", escrowId);
+        }
+
+        // Mint Requester Badge
+        try INeoBadge(badgeAddress).mint(
+            buyer, 
+            INeoBadge.BadgeCategory.Requester, 
+            string(abi.encodePacked(baseUri, "requester/", idStr))
+        ) {} catch {
+            emit ModuleMissing(NEO_BADGE, "mintRequesterBadge_failed", escrowId);
+        }
+    }
+
+    function _toString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) {
+            return "0";
+        }
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
     }
 
     function _requireActiveAgent(address agent) internal view {

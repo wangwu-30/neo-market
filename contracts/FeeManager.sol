@@ -1,37 +1,53 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+/**
+ * @title FeeManager
+ * @dev Manages protocol fees. Pivoted to flat fees to comply with 
+ * regulations regarding transaction-volume-based commission.
+ */
 contract FeeManager {
-    uint16 public feeBps;
+    uint256 public flatFee; // Flat fee in USDC (e.g., 2,000,000 for 2 USDC)
     address public treasury;
-    uint256 public minFee;
     address public owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event FlatFeeUpdated(uint256 newFee);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "NOT_OWNER");
         _;
     }
 
-    constructor(uint16 _feeBps, address _treasury) {
+    constructor(uint256 _flatFee, address _treasury) {
         require(_treasury != address(0), "ZERO_TREASURY");
-        feeBps = _feeBps;
+        flatFee = _flatFee;
         treasury = _treasury;
-        minFee = 1e6; // Default min fee (1 USDC)
         owner = msg.sender;
         emit OwnershipTransferred(address(0), msg.sender);
     }
 
-    function getFee(uint256 amount) external view returns (uint256) {
-        uint256 calculated = (amount * feeBps) / 10000;
-        if (calculated < minFee) {
-            return minFee;
-        }
-        return calculated;
+    /**
+     * @dev Returns the fee for a given amount. Now ignores amount and returns flatFee.
+     */
+    function getFee(uint256 /* amount */) external view returns (uint256) {
+        return flatFee;
+    }
+    
+    /**
+     * @dev Backwards compatibility for TokenEscrow v1.
+     */
+    function feeBps() external pure returns (uint16) {
+        return 0; 
     }
 
-    function setMinFee(uint256 _minFee) external onlyOwner {
-        minFee = _minFee;
+    function setFlatFee(uint256 _flatFee) external onlyOwner {
+        flatFee = _flatFee;
+        emit FlatFeeUpdated(_flatFee);
+    }
+    
+    function setTreasury(address _treasury) external onlyOwner {
+        require(_treasury != address(0), "ZERO_TREASURY");
+        treasury = _treasury;
     }
 }

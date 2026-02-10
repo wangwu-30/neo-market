@@ -41,7 +41,14 @@ const fs = __importStar(require("fs"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 // Load addresses
-const ADDR_PATH = path.join(__dirname, "deployed_addresses.json");
+// Search for deployed_addresses.json in current dir or parent (to support ts-node and dist)
+let ADDR_PATH = path.join(process.cwd(), "deployed_addresses.json");
+if (!fs.existsSync(ADDR_PATH)) {
+    ADDR_PATH = path.join(__dirname, "deployed_addresses.json");
+}
+if (!fs.existsSync(ADDR_PATH)) {
+    ADDR_PATH = path.join(__dirname, "..", "deployed_addresses.json");
+}
 if (!fs.existsSync(ADDR_PATH)) {
     console.error("❌ Error: deployed_addresses.json not found.");
     process.exit(1);
@@ -206,14 +213,53 @@ program
                 break;
             const job = await market.getJob(i);
             console.log(`\n🆔 Job #${job.jobId}`);
+            console.log(`   Buyer: ${job.buyer}`);
             console.log(`   Spec: ${job.jobSpecCID}`);
             console.log(`   Budget: ${ethers_1.ethers.formatUnits(job.budget, 6)} USDC`);
             const status = ["Init", "Open", "Selected", "Cancelled", "Closed", "Expired"][Number(job.status)];
             console.log(`   Status: ${status}`);
+            if (Number(job.status) === 2) { // Selected
+                const bidId = await market.selectedBidOf(i);
+                const bid = await market.getBid(bidId);
+                const escrowId = await market.escrowOf(i);
+                console.log(`   Selected Bid: #${bidId} by ${bid.agent} ($${ethers_1.ethers.formatUnits(bid.price, 6)})`);
+                console.log(`   Escrow ID: ${escrowId}`);
+            }
         }
     }
     catch (e) {
         console.error("Error fetching jobs:", e);
+    }
+});
+// --- Command: Bids ---
+program
+    .command("bids")
+    .description("List bids for a job")
+    .requiredOption("-j, --job <id>", "Job ID")
+    .action(async (options) => {
+    const provider = getProvider(program.opts());
+    const market = getContract("Marketplace", ADDRS.Marketplace, provider);
+    try {
+        const count = await market.bidCount();
+        console.log(`🔍 Bids for Job #${options.job}:\n`);
+        let found = 0;
+        for (let i = 1; i <= Number(count); i++) {
+            const bid = await market.getBid(i);
+            if (bid.jobId.toString() === options.job.toString()) {
+                console.log(`🆔 Bid #${i}`);
+                console.log(`   Agent: ${bid.agent}`);
+                console.log(`   Price: ${ethers_1.ethers.formatUnits(bid.price, 6)} USDC`);
+                console.log(`   ETA: ${bid.eta}s`);
+                console.log(`   CID: ${bid.bidCID}`);
+                console.log("");
+                found++;
+            }
+        }
+        if (found === 0)
+            console.log("No bids found.");
+    }
+    catch (e) {
+        console.error("Error fetching bids:", e);
     }
 });
 // --- Command: Bid ---
@@ -223,6 +269,7 @@ program
     .requiredOption("-p, --price <amount>", "Price USDC")
     .requiredOption("-e, --eta <seconds>", "ETA")
     .requiredOption("-c, --cid <ipfs_cid>", "CID")
+    .option("-r, --revisions <number>", "Max Revisions", "1")
     .action(async (options) => {
     const provider = getProvider(program.opts());
     const wallet = getWallet(program.opts(), provider);
@@ -233,14 +280,121 @@ program
     const market = getContract("Marketplace", ADDRS.Marketplace, wallet);
     const price = ethers_1.ethers.parseUnits(options.price, 6);
     console.log(`🦞 Bidding on Job #${options.job}...`);
+    // Debug: list fragment types
+    const fragment = market.interface.getFunction("placeBid");
+    if (fragment) {
+        console.log(`   Found fragment: placeBid(${fragment.inputs.map(i => i.type).join(",")})`);
+    }
     try {
-        const tx = await market.placeBid(options.job, options.cid, price, options.eta);
+        const tx = await market.placeBid(BigInt(options.job), options.cid, price, BigInt(options.eta), Number(options.revisions));
         console.log(`✅ Tx: ${tx.hash}`);
         await tx.wait();
         console.log("🎉 Bid Placed!");
     }
     catch (e) {
         console.error("❌ Bid Failed:", e.shortMessage || e.message);
+    }
+});
+// --- Command: Set SoW ---
+program
+    .command("set-sow")
+    .description("Lock the negotiated Statement of Work (SoW) hash")
+    .requiredOption("-e, --escrow <id>", "Escrow ID")
+    .requiredOption("-s, --sow <hash>", "SoW Hash (bytes32)")
+    .action(async (options) => {
+    const provider = getProvider(program.opts());
+    const wallet = getWallet(program.opts(), provider);
+    if (!wallet) {
+        console.error("❌ Key required");
+        process.exit(1);
+    }
+    const escrow = getContract("TokenEscrow", ADDRS.TokenEscrow, wallet);
+    console.log(`✍️ Locking SoW for Escrow #${options.escrow}...`);
+    try {
+        const tx = await escrow.setSowHash(options.escrow, options.sow);
+        console.log(`✅ Tx: ${tx.hash}`);
+        await tx.wait();
+        console.log("🎉 SoW Locked!");
+    }
+    catch (e) {
+        console.error("❌ Set SoW Failed:", e.shortMessage || e.message);
+    }
+});
+// --- Command: Pay Intent ---
+program
+    .command("pay-intent")
+    .description("Pay intent deposit (consultation fee)")
+    .requiredOption("-e, --escrow <id>", "Escrow ID")
+    .requiredOption("-a, --amount <amount>", "Amount in USDC")
+    .action(async (options) => {
+    const provider = getProvider(program.opts());
+    const wallet = getWallet(program.opts(), provider);
+    if (!wallet) {
+        console.error("❌ Key required");
+        process.exit(1);
+    }
+    const escrow = getContract("TokenEscrow", ADDRS.TokenEscrow, wallet);
+    const token = getContract("USDCMock", ADDRS.usdc, wallet);
+    const amount = ethers_1.ethers.parseUnits(options.amount, 6);
+    console.log("💰 Approving USDC...");
+    const txApprove = await token.approve(ADDRS.TokenEscrow, amount);
+    await txApprove.wait();
+    console.log(`🚀 Paying Intent Deposit for Escrow #${options.escrow}...`);
+    try {
+        const tx = await escrow.payIntentDeposit(options.escrow, amount);
+        console.log(`✅ Tx: ${tx.hash}`);
+        await tx.wait();
+        console.log("🎉 Intent Deposit Paid!");
+    }
+    catch (e) {
+        console.error("❌ Pay Intent Failed:", e.shortMessage || e.message);
+    }
+});
+// --- Command: Claim Intent ---
+program
+    .command("claim-intent")
+    .description("Claim intent deposit (Agent only)")
+    .requiredOption("-e, --escrow <id>", "Escrow ID")
+    .action(async (options) => {
+    const provider = getProvider(program.opts());
+    const wallet = getWallet(program.opts(), provider);
+    if (!wallet) {
+        console.error("❌ Key required");
+        process.exit(1);
+    }
+    const escrow = getContract("TokenEscrow", ADDRS.TokenEscrow, wallet);
+    console.log(`💸 Claiming Intent Deposit for Escrow #${options.escrow}...`);
+    try {
+        const tx = await escrow.claimIntentDeposit(options.escrow);
+        console.log(`✅ Tx: ${tx.hash}`);
+        await tx.wait();
+        console.log("🎉 Intent Deposit Claimed!");
+    }
+    catch (e) {
+        console.error("❌ Claim Intent Failed:", e.shortMessage || e.message);
+    }
+});
+// --- Command: Badges ---
+program
+    .command("badges")
+    .description("View badges for an address")
+    .argument("[address]", "Address to query")
+    .action(async (address) => {
+    const provider = getProvider(program.opts());
+    const wallet = getWallet(program.opts(), provider);
+    const target = address || (wallet ? wallet.address : null);
+    if (!target) {
+        console.error("❌ Address required");
+        process.exit(1);
+    }
+    const badge = getContract("NeoBadge", ADDRS.NeoBadge, provider);
+    try {
+        const balance = await badge.balanceOf(target);
+        console.log(`🏅 Badges for ${target}: ${balance}`);
+        // In a real CLI we would iterate and fetch URIs
+    }
+    catch (e) {
+        console.error("❌ Failed to fetch badges:", e);
     }
 });
 // --- Command: Deliver ---
@@ -301,6 +455,30 @@ program
     }
     catch (e) {
         console.error("❌ Deliver Failed:", e.shortMessage || e.message);
+    }
+});
+// --- Command: Accept ---
+program
+    .command("accept")
+    .description("Accept delivery and release payment")
+    .requiredOption("-e, --escrow <id>", "Escrow ID")
+    .action(async (options) => {
+    const provider = getProvider(program.opts());
+    const wallet = getWallet(program.opts(), provider);
+    if (!wallet) {
+        console.error("❌ Key required");
+        process.exit(1);
+    }
+    const escrow = getContract("TokenEscrow", ADDRS.TokenEscrow, wallet);
+    console.log(`✅ Accepting Escrow #${options.escrow}...`);
+    try {
+        const tx = await escrow.accept(options.escrow);
+        console.log(`✅ Tx: ${tx.hash}`);
+        await tx.wait();
+        console.log("🎉 Payment Released & Badges Minted!");
+    }
+    catch (e) {
+        console.error("❌ Accept Failed:", e.shortMessage || e.message);
     }
 });
 program.parse(process.argv);

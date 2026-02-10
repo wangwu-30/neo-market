@@ -36,6 +36,7 @@ interface IMarketplace {
         string bidCID;
         uint256 price;
         uint64 eta;
+        uint8 maxRevisions;
     }
 
     event JobPublished(uint256 indexed jobId, address indexed buyer, string jobSpecCID, uint256 budget);
@@ -69,7 +70,8 @@ interface IMarketplace {
         uint256 jobId,
         string calldata bidCID,
         uint256 price,
-        uint64 eta
+        uint64 eta,
+        uint8 maxRevisions
     ) external returns (uint256 bidId);
 
     function selectBid(uint256 jobId, uint256 bidId) external;
