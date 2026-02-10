@@ -177,6 +177,7 @@ program
     .description("Select a bid for your job")
     .requiredOption("-j, --job <id>", "Job ID")
     .requiredOption("-b, --bid <id>", "Bid ID")
+    .option("-s, --sow <hash>", "SoW Hash (bytes32)")
     .action(async (options) => {
     const provider = getProvider(program.opts());
     const wallet = getWallet(program.opts(), provider);
@@ -187,7 +188,8 @@ program
     console.log(`__ Selecting Bid #${options.bid} for Job #${options.job}...`);
     const market = getContract("Marketplace", ADDRS.Marketplace, wallet);
     try {
-        const tx = await market.selectBid(options.job, options.bid);
+        const sow = options.sow || ethers_1.ethers.ZeroHash;
+        const tx = await market.selectBid(options.job, options.bid, sow);
         console.log(`✅ Tx: ${tx.hash}`);
         await tx.wait();
         console.log("🎉 Bid Selected!");

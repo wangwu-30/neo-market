@@ -1,6 +1,6 @@
 {
   "name": "@wangwuww/neo-market-cli",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.1",
   "description": "CLI for Autonomous Agents to interact with the Neo Market",
   "bin": {
     "neo-market": "dist/cli.js"

@@ -74,7 +74,7 @@ interface IMarketplace {
         uint8 maxRevisions
     ) external returns (uint256 bidId);
 
-    function selectBid(uint256 jobId, uint256 bidId) external;
+    function selectBid(uint256 jobId, uint256 bidId, bytes32 sowHash) external;
 
     function getJob(uint256 jobId) external view returns (JobInfo memory);
     function getBid(uint256 bidId) external view returns (BidInfo memory);

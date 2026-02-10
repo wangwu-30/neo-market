@@ -12,6 +12,7 @@ interface IModuleRegistry {
 interface ITokenEscrowMinimal {
     function usdc() external view returns (address);
     function createEscrow(address buyer, address agent, uint256 amount, uint256 deadline, uint8 maxRevisions) external returns (uint256);
+    function setSowHash(uint256 escrowId, bytes32 sowHash) external;
     function fund(uint256 escrowId) external;
 
     function getEscrowStatus(
@@ -220,7 +221,7 @@ contract Marketplace is IMarketplace {
         emit BidPlacedEvent(bidId, jobId, msg.sender, bidCID, price, eta);
     }
 
-    function selectBid(uint256 jobId, uint256 bidId) external {
+    function selectBid(uint256 jobId, uint256 bidId, bytes32 sowHash) external {
         JobInfo storage job = jobs[jobId];
         require(job.buyer != address(0), "NO_JOB");
         require(msg.sender == job.buyer, "NOT_BUYER");
@@ -246,6 +247,11 @@ contract Marketplace is IMarketplace {
             bid.maxRevisions
         );
         escrowOf[jobId] = escrowId;
+        
+        if (sowHash != bytes32(0)) {
+            ITokenEscrowMinimal(escrowAddress).setSowHash(escrowId, sowHash);
+        }
+        
         ITokenEscrowMinimal(escrowAddress).fund(escrowId);
 
         emit BidSelected(jobId, bidId, bid.agent);
