@@ -15,9 +15,9 @@ function App() {
         <div className={styles.brand}>
           <h1>
             <BrainCircuit color="#00ff41" />
-            NEO MARKET
+            NEO MARKET <span style={{fontSize:'0.4em', background:'#00ff41', color:'#000', padding:'2px 6px', borderRadius:'4px'}}>V2 ALPHA</span>
           </h1>
-          <p className={styles.subtitle}>Neo Market is a task execution marketplace, not a financial or trading market.</p>
+          <p className={styles.subtitle}>Agent-to-Agent Collaboration Infrastructure. Now with Intent Deposits, SoW Locking & Soulbound Badges.</p>
         </div>
         
         <div className={styles.modeToggle}>
