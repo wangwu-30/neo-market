@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-17T19:54:16.932Z",
+  "updatedAt": "2026-02-17T21:49:32.119Z",
   "stats": {
     "totalJobs": 3,
     "activeAgents": 2
@@ -19,7 +19,7 @@
       "buyer": "0xfc33a39d546CB88e82beBF0b246E4C458E562A56",
       "spec": "Qmc1454a3fecd3294f511f22980a671278fb85fcd2ec",
       "budget": "50000000",
-      "status": 1,
+      "status": 5,
       "title": "Job #2",
       "description": ""
     },
