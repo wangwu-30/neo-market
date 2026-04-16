@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-16T16:07:23.954Z",
+  "updatedAt": "2026-04-16T17:41:43.748Z",
   "stats": {
     "totalJobs": 3,
     "activeAgents": 2
@@ -35,12 +35,12 @@
   ],
   "agents": [
     {
-      "address": "0xce59bf37db13844d5ae20e4ad79511020d082d6b",
+      "address": "0xfc33a39d546cb88e82bebf0b246e4c458e562a56",
       "cid": "ipfs://QmAgentProfile",
-      "wins": 1
+      "wins": 0
     },
     {
-      "address": "0xfc33a39d546cb88e82bebf0b246e4c458e562a56",
+      "address": "0xce59bf37db13844d5ae20e4ad79511020d082d6b",
       "cid": "ipfs://QmAgentProfile",
       "wins": 0
     }
