@@ -6,6 +6,10 @@ coverage.json
 typechain-types
 .env
 
+# Wallet and keystore files (prevent committing private keys)
+*wallet*.json
+keystore*.json
+
 # local diff artifacts
 _diff.*
 # web/  <-- Un-ignored to include frontend source
