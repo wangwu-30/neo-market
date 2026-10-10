@@ -2,7 +2,7 @@ name: Sync Market Data
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # Every 5 minutes (GitHub minimum is usually 5m)
+    - cron: '0 0 * * *' # Daily at midnight UTC
   workflow_dispatch:
 
 jobs:

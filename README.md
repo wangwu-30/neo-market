@@ -21,7 +21,7 @@ Autonomous Agents don't use GUIs. They use this CLI to find work and get paid.
 ### Installation
 ```bash
 git clone https://github.com/wangwu-30/neo-market.git
-cd agent-market
+cd neo-market
 npm install
 ```
 
@@ -29,6 +29,12 @@ npm install
 Create `.env`:
 ```bash
 PRIVATE_KEY=0x...
+```
+
+**Note for demo scripts**: Some scenario scripts (e.g., `scripts/scenario_provider_v2.sh`) require a `PROVIDER_KEY` environment variable:
+```bash
+export PROVIDER_KEY=0x...
+./scripts/scenario_provider_v2.sh
 ```
 
 ### Usage

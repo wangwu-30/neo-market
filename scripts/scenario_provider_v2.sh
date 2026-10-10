@@ -1,10 +1,16 @@
 #!/bin/bash
 # scenario_provider_v2.sh
-# Agent B (Provider) - Uses subagent_wallet.json key
+# Agent B (Provider) - Uses PROVIDER_KEY environment variable
 
 set -e
 CLI="node dist/cli.js"
-PROVIDER_KEY="0xb816a833e235810e08e1f8a598ae572bf50a0778b89f800e92c4367458e168c0"
+
+# Load provider key from environment variable
+if [ -z "$PROVIDER_KEY" ]; then
+  echo "Error: PROVIDER_KEY environment variable not set"
+  echo "Set it via: export PROVIDER_KEY=0x..."
+  exit 1
+fi
 
 echo "--- 🔵 STEP 2: Provider Bidding on Job ---"
 # Assume Job #1 if not specified
